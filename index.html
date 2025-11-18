@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Rutinas IA</title>
+</head>
+<body>
+
+    <h1>Tu Entrenador Personal IA</h1>
+    <p>Introduce tus datos para generar una rutina personalizada.</p>
+
+    <form id="fitness-form">
+
+        <div>
+            <label for="objetivo">¿Cuál es tu objetivo principal?</label>
+            <select name="objetivo" id="objetivo" required>
+                <option value="">-- Por favor, elige una opción --</option>
+                <option value="hipertrofia">Hipertrofia (Ganar músculo)</option>
+                <option value="fuerza">Fuerza (Powerlifting)</option>
+                <option value="perdida_peso">Pérdida de Peso / Definición</option>
+                <option value="principiante_total">Principiante (Adaptación inicial)</option>
+            </select>
+        </div>
+        
+        <br> 
+
+        <div>
+            <label for="nivel">Tu nivel de experiencia:</label>
+            <select name="nivel" id="nivel" required>
+                <option value="principiante">Principiante (0-6 meses)</option>
+                <option value="intermedio">Intermedio (6 meses - 2 años)</option>
+                <option value="avanzado">Avanzado (2+ años)</option>
+            </select>
+        </div>
+        
+        <br>
+        
+        <div>
+            <label>¿Qué días específicos puedes entrenar?</label><br>
+            
+            <input type="checkbox" id="dia_lunes" name="dias_disponibles" value="lunes">
+            <label for="dia_lunes">Lunes</label><br>
+            
+            <input type="checkbox" id="dia_martes" name="dias_disponibles" value="martes">
+            <label for="dia_martes">Martes</label><br>
+            
+            <input type="checkbox" id="dia_miercoles" name="dias_disponibles" value="miercoles">
+            <label for="dia_miercoles">Miércoles</label><br>
+            
+            <input type="checkbox" id="dia_jueves" name="dias_disponibles" value="jueves">
+            <label for="dia_jueves">Jueves</label><br>
+            
+            <input type="checkbox" id="dia_viernes" name="dias_disponibles" value="viernes">
+            <label for="dia_viernes">Viernes</label><br>
+            
+            <input type="checkbox" id="dia_sabado" name="dias_disponibles" value="sabado">
+            <label for="dia_sabado">Sábado</label><br>
+            
+            <input type="checkbox" id="dia_domingo" name="dias_disponibles" value="domingo">
+            <label for="dia_domingo">Domingo</label>
+        </div>
+
+        <br>
+
+        <div>
+            <label>¿Tienes alguna lesión o molestia a evitar?</label><br>
+            <input type="checkbox" id="lesion_hombro" name="lesiones" value="hombro">
+            <label for="lesion_hombro">Hombro (Evitar presses verticales)</label><br>
+            
+            <input type="checkbox" id="lesion_rodilla" name="lesiones" value="rodilla">
+            <label for="lesion_rodilla">Rodilla (Evitar sentadilla profunda)</label><br>
+            
+            <input type="checkbox" id="lesion_espalda" name="lesiones" value="espalda_baja">
+            <label for="lesion_espalda">Espalda Baja (Evitar peso muerto)</label>
+        </div>
+
+        <br>
+
+        <div>
+            <label for="edad">Edad:</label>
+            <input type="number" id="edad" name="edad" min="16" max="99">
+        </div>
+
+        <br>
+
+        <button type="submit">Generar mi Rutina</button>
+
+    </form>
+
+    <hr> 
+
+    <h2>Tu Rutina Personalizada:</h2>
+    <div id="resultado-rutina">
+        <p>Tu rutina aparecerá aquí después de introducir tus datos...</p>
+    </div>
+
+
+    <script>
+        // Selecciono el formulario y el div de resultados por sus 'id'
+        const fitnessForm = document.getElementById('fitness-form');
+        const resultadoDiv = document.getElementById('resultado-rutina');
+
+        // Me quedo escuchando el evento 'submit' (cuando el usuario pulsa el botón)
+        fitnessForm.addEventListener('submit', async function(event) {
+            
+            // Evito que el formulario recargue la página (el comportamiento por defecto)
+            event.preventDefault();
+
+            // Muestro un mensaje de "Cargando..." al usuario
+            resultadoDiv.innerHTML = '<p>Generando tu rutina... Esto puede tardar un momento...</p>';
+
+            // Capturo todos los datos del formulario que acaban de enviar
+            const formData = new FormData(fitnessForm);
+            
+            // Convierto esos datos a un objeto JSON simple que mi API pueda leer
+            const datosUsuario = {};
+            formData.forEach((valor, clave) => {
+                // Esta lógica maneja los checkboxes (lesiones y días)
+                // Si la clave (ej. 'lesiones') ya existe en mi objeto...
+                if (datosUsuario[clave]) {
+                    // ...me aseguro de que sea un array (lista)
+                    if (!Array.isArray(datosUsuario[clave])) {
+                        datosUsuario[clave] = [datosUsuario[clave]];
+                    }
+                    // ...y añado el nuevo valor (ej. 'rodilla' se añade a ['hombro'])
+                    datosUsuario[clave].push(valor);
+                } else {
+                    // Si es la primera vez que veo la clave, solo asigno el valor
+                    datosUsuario[clave] = valor;
+                }
+            });
+
+            // Envío los datos a mi API de Flask (el Backend)
+            try {
+                // Uso 'fetch' para llamar a mi endpoint '/generar_rutina'
+                const respuesta = await fetch('/generar_rutina', {
+                    method: 'POST', // Digo que estoy enviando datos
+                    headers: {
+                        'Content-Type': 'application/json' // Digo que los datos son JSON
+                    },
+                    body: JSON.stringify(datosUsuario) // Convierto mi objeto JS en texto JSON
+                });
+
+                // Si el servidor me da un error (ej. 500), lanzo una excepción
+                if (!respuesta.ok) {
+                    throw new Error(`Error del servidor: ${respuesta.statusText}`);
+                }
+
+                // Recibo la rutina (JSON) y la muestro
+                const rutina = await respuesta.json();
+                
+                // Muestro el JSON recibido (luego lo pondré bonito)
+                // Uso <pre> para que respete los saltos de línea y espacios del JSON
+                resultadoDiv.innerHTML = `<pre>${JSON.stringify(rutina, null, 2)}</pre>`;
+
+            } catch (error) {
+                // Si algo falla (la red, la API...), muestro el error
+                resultadoDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+                console.error('Hubo un error al llamar a la API:', error);
+            }
+        });
+    </script>
+</body>
+</html>
