@@ -33,6 +33,31 @@
                 <option value="avanzado">Avanzado (2+ años)</option>
             </select>
         </div>
+        <br>
+
+        <div>
+            <label>Músculos a Priorizar (Selecciona máx. 3):</label><br>
+            <input type="checkbox" id="prio_pecho" name="musculo_prioridad" value="pecho" class="limit-checkbox">
+            <label for="prio_pecho">Pecho</label>
+            
+            <input type="checkbox" id="prio_espalda" name="musculo_prioridad" value="espalda" class="limit-checkbox">
+            <label for="prio_espalda">Espalda</label>
+            
+            <input type="checkbox" id="prio_hombro" name="musculo_prioridad" value="hombro" class="limit-checkbox">
+            <label for="prio_hombro">Hombro</label>
+            
+            <input type="checkbox" id="prio_cuadriceps" name="musculo_prioridad" value="cuadriceps" class="limit-checkbox">
+            <label for="prio_cuadriceps">Cuádriceps</label>
+
+            <input type="checkbox" id="prio_femoral" name="musculo_prioridad" value="femoral" class="limit-checkbox">
+            <label for="prio_femoral">Femoral/Glúteo</label>
+
+            <input type="checkbox" id="prio_biceps" name="musculo_prioridad" value="biceps" class="limit-checkbox">
+            <label for="prio_biceps">Bíceps</label>
+
+            <input type="checkbox" id="prio_triceps" name="musculo_prioridad" value="triceps" class="limit-checkbox">
+            <label for="prio_triceps">Tríceps</label>
+        </div>
         
         <br>
         
@@ -101,6 +126,26 @@
         const fitnessForm = document.getElementById('fitness-form');
         const resultadoDiv = document.getElementById('resultado-rutina');
 
+    // 1. Selecciono TODOS los checkboxes que tengan la clase 'limit-checkbox'
+    const checkboxesPrioridad = document.querySelectorAll('.limit-checkbox');
+
+    // 2. Añado un "escucha" a CADA uno de esos checkboxes
+    checkboxesPrioridad.forEach(checkbox => {
+        checkbox.addEventListener('change', function () {
+
+            // 3. Cuento cuántos están marcados (checked) AHORA MISMO
+            const marcados = document.querySelectorAll('.limit-checkbox:checked').length;
+
+            // 4. Si hay más de 3 marcados...
+            if (marcados > 3) {
+                // ...desmarco el que el usuario acaba de intentar marcar.
+                this.checked = false;
+                alert("¡Solo puedes priorizar un máximo de 3 músculos!");
+            }
+        });
+    });    
+
+
         // Me quedo escuchando el evento 'submit' (cuando el usuario pulsa el botón)
         fitnessForm.addEventListener('submit', async function(event) {
             
@@ -131,10 +176,10 @@
                 }
             });
 
-            // Envío los datos a mi API de Flask (el Backend)
+            // Envío los datos a mi API de Flask
             try {
                 // Uso 'fetch' para llamar a mi endpoint '/generar_rutina'
-                const respuesta = await fetch('/generar_rutina', {
+                const respuesta = await fetch('http://127.0.0.1:5000/generar_rutina', {
                     method: 'POST', // Digo que estoy enviando datos
                     headers: {
                         'Content-Type': 'application/json' // Digo que los datos son JSON

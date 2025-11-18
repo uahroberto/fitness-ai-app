@@ -1,0 +1,7 @@
+# Ignorar el entorno virtual (las miles de librerías)
+venv/
+__pycache__/
+*.pyc
+
+# Ignorar claves secretas (SEGURIDAD)
+.env
